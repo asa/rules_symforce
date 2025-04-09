@@ -12,6 +12,7 @@ backprojection, the factor operates on pixel coordinates in the source and targe
 cameras that do not have backprojection, it instead operates on a ray in the source camera frame and
 a pixel in the target camera.
 """
+
 import functools
 from pathlib import Path
 
@@ -158,7 +159,7 @@ def inverse_range_landmark_reprojection_error_residual(
     return whitened_residual
 
 
-def inverse_range_landmark_gnc_residual(
+def inverse_range_landmark_gnc_residual(  # noqa: PLR0913, PLR0917
     source_pose: sf.Pose3,
     source_calibration: sf.CameraCal,
     target_pose: sf.Pose3,
@@ -407,7 +408,7 @@ def inverse_range_landmark_ray_gnc_residual(
     )
 
 
-def generate(CAM_TYPES: T.Sequence[T.Type], output_dir: Path, config: codegen.CodegenConfig = None) -> None:
+def generate(CAM_TYPES: T.Sequence[T.Type], output_dir: Path, config: T.Optional[codegen.CodegenConfig] = None) -> None:
     """
     Generate the SLAM package for the given language.
 

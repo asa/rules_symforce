@@ -48,11 +48,11 @@ def generate_types(
     file_name: str,
     values_indices: T.Mapping[str, T.Dict[str, IndexEntry]],
     use_eigen_types: bool,
-    shared_types: T.Mapping[str, str] = None,
+    shared_types: T.Optional[T.Mapping[str, str]] = None,
     scalar_type: str = "double",
-    output_dir: T.Openable = None,
-    lcm_bindings_output_dir: T.Openable = None,
-    templates: template_util.TemplateList = None,
+    output_dir: T.Optional[T.Openable] = None,
+    lcm_bindings_output_dir: T.Optional[T.Openable] = None,
+    templates: T.Optional[template_util.TemplateList] = None,
 ) -> TypesCodegenData:
     """
     Generates LCM types from the given values_indices, including the necessary subtypes
@@ -164,7 +164,7 @@ def generate_types(
         else:
             typenames_dict[name] = f"{name}_t"
             namespaces_dict[name] = package_name
-    for typename, data in types_dict.items():
+    for data in types_dict.values():
         # Iterate through types in types_dict. If type is external, use the shared_types to
         # get the namespace.
         unformatted_typenames = T.cast(T.List[str], data["unformatted_typenames"])
@@ -263,6 +263,7 @@ def _fill_types_dict_recursive(
     """
     Recursively compute type information from the key and values index and fill into ``types_dict``.
     """
+    is_shared_type = key in shared_types and "." in shared_types[key]
     data: T.Dict[str, T.Any] = {}
 
     typename = typename_from_key(key, shared_types)
@@ -279,7 +280,7 @@ def _fill_types_dict_recursive(
     data["subtypes"] = {}
     for subkey, entry in index.items():
         datatype = entry.datatype()
-        if key in shared_types and "." in shared_types[key]:
+        if is_shared_type:
             # This is a shared type. Don't generate any subtypes.
             continue
         if issubclass(datatype, Values):
@@ -306,7 +307,7 @@ def _fill_types_dict_recursive(
             types_dict=types_dict,
         )
 
-    if typename in types_dict:
+    if typename in types_dict and not is_shared_type:
 
         def assert_equal(field: str) -> None:
             assert types_dict[typename][field] == data[field]

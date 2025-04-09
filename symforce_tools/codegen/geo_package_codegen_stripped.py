@@ -13,20 +13,24 @@ import symforce.symbolic as sf
 from symforce import logger
 from symforce import python_util
 from symforce import typing as T
-
 from symforce.codegen import Codegen
 from symforce.codegen import CodegenConfig
+
+#from symforce.codegen import CppConfig
+#from symforce.codegen import PythonConfig
+#from symforce.codegen import codegen_util
+#from symforce.codegen import lcm_types_codegen
 
 from symforce.codegen import template_util
 from symforce.codegen.ops_codegen_util import make_group_ops_funcs
 from symforce.codegen.ops_codegen_util import make_lie_group_ops_funcs
 
-from rules_symforce.symforce_tools.codegen.backends.cpp.cpp_config import CppConfig
-from rules_symforce.symforce_tools.codegen.backends.python.python_config import PythonConfig
+from symforce_tools.codegen.backends.cpp.cpp_config import CppConfig
+from symforce_tools.codegen.backends.python.python_config import PythonConfig
 
 # need to make the python sym package before any other packages can be generated
 
-def geo_class_common_data(cls: T.Type, config) -> T.Dict[str, T.Any]:
+def geo_class_common_data(cls: T.Type, config: CodegenConfig ) -> T.Dict[str, T.Any]:
     """
     Data for template generation of this class. Contains all useful info common
     to all class-specific templates.
@@ -93,25 +97,41 @@ def _custom_generated_methods(config: CodegenConfig) -> T.Dict[T.Type, T.List[Co
             config=config,
         )
 
+    def to_yaw_pitch_roll(self: sf.Rot3) -> sf.V3:
+        return sf.V3(self.to_yaw_pitch_roll(epsilon=0))
+
+    to_yaw_pitch_roll.__doc__ = sf.Rot3.to_yaw_pitch_roll.__doc__
+
+    def from_yaw(yaw: T.Scalar) -> sf.Rot3:
+        """Construct from yaw angle in radians"""
+        return sf.Rot3.from_yaw_pitch_roll(yaw=yaw)
+
+    def from_pitch(pitch: T.Scalar) -> sf.Rot3:
+        """Construct from pitch angle in radians"""
+        return sf.Rot3.from_yaw_pitch_roll(pitch=pitch)
+
+    def from_roll(roll: T.Scalar) -> sf.Rot3:
+        """Construct from roll angle in radians"""
+        return sf.Rot3.from_yaw_pitch_roll(roll=roll)
+
     rot3_functions = (
         [
             codegen_mul(sf.Rot3, sf.Vector3),
             Codegen.function(func=sf.Rot3.to_tangent_norm, config=config),
             Codegen.function(func=sf.Rot3.to_rotation_matrix, config=config),
             Codegen.function(
-                func=functools.partial(sf.Rot3.random_from_uniform_samples, pi=sf.pi),
-                name="random_from_uniform_samples",
-                config=config,
+                func=functools.partial(sf.Rot3.random_from_uniform_samples, pi=sf.pi), config=config
             ),
             Codegen.function(
                 # TODO(aaron): We currently can't generate custom methods with defaults - fix this, and
                 # pass epsilon as an argument with a default
-                func=lambda self: sf.V3(self.to_yaw_pitch_roll(epsilon=0)),
-                input_types=[sf.Rot3],
-                name="to_yaw_pitch_roll",
+                func=to_yaw_pitch_roll,
                 config=config,
             ),
             Codegen.function(func=sf.Rot3.from_yaw_pitch_roll, config=config),
+            Codegen.function(func=from_yaw, config=config),
+            Codegen.function(func=from_pitch, config=config),
+            Codegen.function(func=from_roll, config=config),
         ]
         + (
             # TODO(brad): We don't currently generate this in python because python (unlike C++)
@@ -141,11 +161,11 @@ def _custom_generated_methods(config: CodegenConfig) -> T.Dict[T.Type, T.List[Co
     )
 
     def pose_getter_methods(pose_type: T.Type) -> T.List[Codegen]:
-        def rotation(self: T.Any) -> T.Any:
+        def rotation_storage(self: T.Any) -> T.Any:
             """
             Returns the rotational component of this pose.
             """
-            return self.R
+            return sf.Matrix(self.R.to_storage())
 
         def position(self: T.Any) -> T.Any:
             """
@@ -154,7 +174,7 @@ def _custom_generated_methods(config: CodegenConfig) -> T.Dict[T.Type, T.List[Co
             return self.t
 
         return [
-            Codegen.function(func=rotation, input_types=[pose_type], config=config),
+            Codegen.function(func=rotation_storage, input_types=[pose_type], config=config),
             Codegen.function(func=position, input_types=[pose_type], config=config),
         ]
 
@@ -163,6 +183,10 @@ def _custom_generated_methods(config: CodegenConfig) -> T.Dict[T.Type, T.List[Co
             codegen_mul(sf.Rot2, sf.Vector2),
             Codegen.function(func=sf.Rot2.from_angle, config=config),
             Codegen.function(func=sf.Rot2.to_rotation_matrix, config=config),
+            Codegen.function(func=sf.Rot2.from_rotation_matrix, config=config),
+            Codegen.function(
+                func=functools.partial(sf.Rot2.random_from_uniform_sample, pi=sf.pi), config=config
+            ),
         ],
         sf.Rot3: rot3_functions,
         sf.Pose2: pose_getter_methods(sf.Pose2)
@@ -192,7 +216,7 @@ def _custom_generated_methods(config: CodegenConfig) -> T.Dict[T.Type, T.List[Co
 def generate(
              GEO_TYPES: T.Sequence[T.Type], 
              config: CodegenConfig = PythonConfig, 
-             output_dir: Path = None) -> Path:
+             output_dir: T.Optional[Path] = None) -> Path:
     """
     Generate the geo package for the given language.
     """
@@ -222,7 +246,7 @@ def generate(
             data["custom_generated_methods"] = custom_generated_methods.get(cls, {})
             if cls == sf.Pose2:
                 data["imported_classes"] = [sf.Rot2]
-            elif cls in (sf.Pose3, sf.Unit3):
+            elif cls in {sf.Pose3, sf.Unit3}:
                 data["imported_classes"] = [sf.Rot3]
 
             for base_dir, relative_path in (
@@ -335,6 +359,12 @@ def generate(
         #        config=config.render_template_config,
         #    )
 
+        #templates.add(
+        #    template_path=Path("geo_package/all_geo_types.h.jinja"),
+        #    data=Codegen.common_data(),
+        #    config=config.render_template_config,
+        #    output_path=package_dir / "all_geo_types.h",
+        #)
     else:
         raise NotImplementedError(f'Unknown config type: "{config}"')
 

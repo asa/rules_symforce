@@ -7,6 +7,7 @@ import sympy
 from sympy.printing.c import get_math_macros
 from sympy.printing.cxx import CXX11CodePrinter
 
+import symforce.internal.symbolic as sf
 from symforce import typing as T
 
 
@@ -40,7 +41,8 @@ class CppCodePrinter(CXX11CodePrinter):
 
         setattr(self, method_name, _print_expr)
 
-    def _print_Rational(self, expr: sympy.Rational) -> str:
+    @staticmethod
+    def _print_Rational(expr: sympy.Rational) -> str:
         """
         Customizations:
             * Cast all literals to Scalar at compile time instead of using a suffix at codegen time
@@ -159,9 +161,19 @@ class CppCodePrinter(CXX11CodePrinter):
             expr.parent, self._print(expr.j + expr.i * expr.parent.shape[1])
         )
 
+    def _print_SignNoZero(self, expr: sf.SymPySignNoZero) -> str:
+        arg = self._print(expr.args[0])
+        return f"std::copysign(Scalar(1.0), {arg})"
 
-class ComplexCppCodePrinter(CppCodePrinter):  # pylint: disable=too-many-ancestors
-    def _print_Integer(self, expr: sympy.Integer) -> str:
+    def _print_CopysignNoZero(self, expr: sf.SymPyCopysignNoZero) -> str:
+        arg0 = self._print(expr.args[0])
+        arg1 = self._print(expr.args[1])
+        return f"std::copysign({arg0}, {arg1})"
+
+
+class ComplexCppCodePrinter(CppCodePrinter):
+    @staticmethod
+    def _print_Integer(expr: sympy.Integer) -> str:
         """
         Customizations:
             * Cast all integers to Scalar, since binary ops between integers and complex aren't
@@ -169,7 +181,8 @@ class ComplexCppCodePrinter(CppCodePrinter):  # pylint: disable=too-many-ancesto
         """
         return f"Scalar({expr.p})"
 
-    def _print_ImaginaryUnit(self, expr: sympy.Expr) -> str:
+    @staticmethod
+    def _print_ImaginaryUnit(expr: sympy.Expr) -> str:
         """
         Customizations:
             * Print 1i instead of I

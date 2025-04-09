@@ -51,13 +51,22 @@ class {{ cls.__name__ }} {
   using SelfJacobian = Eigen::Matrix<Scalar, {{ ops.LieGroupOps.tangent_dim(cls) }}, {{ ops.LieGroupOps.tangent_dim(cls) }}>;
   {% endif %}
 
-  // Construct from data vec
-  {% if cls.__name__.startswith('Rot') %}
-  // For rotation types the storage is normalized on construction.
-  // This ensures numerical stability as this constructor is called after each codegen operation.
-  explicit {{ cls.__name__ }}(const DataVec& data) : data_(data.normalized()) {}
+  /**
+   * Construct from data vec
+   *
+   * @param normalize Project to the manifold on construction.  This ensures numerical stability as
+   *     this constructor is called after each codegen operation.  Constructing from a normalized
+   *     vector may be faster, e.g. with `FromStorage`.
+   */
+  explicit {{ cls.__name__ }}(const DataVec& data, const bool normalize = true)
+  {% if cls in (sf.Rot2, sf.Rot3, sf.Unit3) %}
+      : data_(normalize ? data.normalized() : data) {}
+  {% elif cls == sf.Pose3 %}
+      : data_(data) { if (normalize) { data_.template head<4>() = data_.template head<4>().normalized();} }
+  {% elif cls == sf.Pose2 %}
+      : data_(data) { if (normalize) { data_.template head<2>() = data_.template head<2>().normalized();} }
   {% else %}
-  explicit {{ cls.__name__ }}(const DataVec& data) : data_(data) {}
+      : data_(data) { (void)normalize; }
   {% endif %}
 
   // Default construct to identity
@@ -95,6 +104,7 @@ class {{ cls.__name__ }} {
       {% set compose_with_point.dimension = typing_util.get_type(spec.inputs["right"]).SHAPE[0] %}
     {% endif %}
     {# Return values from methods are const - https://github.com/symforce-org/symforce/issues/312 #}
+  {{ util.print_docstring(spec.docstring) | indent(2) }}
   const {{ python_util.str_replace_all(util.method_declaration(spec, is_declaration=True), matrix_type_aliases) }};
 
   {% endfor %}
@@ -211,6 +221,10 @@ class {{ cls.__name__ }} {
 
   bool operator==(const {{ cls.__name__ }}& rhs) const {
     return data_ == rhs.Data();
+  }
+
+  bool operator!=(const {{ cls.__name__ }}& rhs) const {
+    return !(*this == rhs);
   }
 
  public:

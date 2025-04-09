@@ -10,12 +10,13 @@ import symforce.symbolic as sf
 from symforce import codegen
 from symforce import logger
 from symforce import python_util
+from symforce import typing as T
 from symforce.codegen import template_util
 
-from rules_symforce.symforce_tools.codegen.backends.cpp.cpp_config import CppConfig
+from symforce_tools.codegen.backends.cpp.cpp_config import CppConfig
 
-# these use the injected backends
-def generate(GEO_TYPES, CAM_TYPES, config: codegen.CodegenConfig, output_dir: Path = None) -> Path:
+# these use the injected backends to bring along GEO and CAM types to generate
+def generate(GEO_TYPES, CAM_TYPES, config: codegen.CodegenConfig, output_dir: T.Optional[Path] = None) -> Path:
     """
     Generate the sym util package for the given language.
     """

@@ -3,6 +3,8 @@
 # This source code is under the Apache 2.0 license found in the LICENSE file.
 # ----------------------------------------------------------------------------
 
+from __future__ import annotations
+
 import collections
 import tempfile
 import textwrap
@@ -22,8 +24,8 @@ from symforce.codegen import template_util
 from symforce.codegen.ops_codegen_util import make_group_ops_funcs
 from symforce.codegen.ops_codegen_util import make_lie_group_ops_funcs
 
-from rules_symforce.symforce_tools.codegen.backends.cpp.cpp_config import CppConfig
-from rules_symforce.symforce_tools.codegen.backends.python.python_config import PythonConfig
+from symforce_tools.codegen.backends.cpp.cpp_config import CppConfig
+from symforce_tools.codegen.backends.python.python_config import PythonConfig
 
 
 def pixel_from_camera_point_with_jacobians(
@@ -164,12 +166,11 @@ def cam_class_data(cls: T.Type, config: CodegenConfig) -> T.Dict[str, T.Any]:
     return data
 
 
-def class_template_data(
-    cls: T.Type, functions_to_doc: T.Sequence["function"]
-) -> T.Dict[str, T.Any]:
+def class_template_data(cls: T.Type, functions_to_doc: T.Sequence[function]) -> T.Dict[str, T.Any]:  # noqa: F821
     data = Codegen.common_data()
     data["doc"] = {}
-    data["doc"]["cls"] = textwrap.dedent(cls.__doc__).strip()  # type: ignore
+    assert cls.__doc__ is not None
+    data["doc"]["cls"] = textwrap.dedent(cls.__doc__).strip()
     for func in functions_to_doc:
         if func.__doc__ is not None:
             data["doc"][func.__name__] = textwrap.dedent(func.__doc__)
@@ -206,7 +207,7 @@ _DISTORTION_COEFF_VALS: T.Dict[str, T.Dict[str, T.Any]] = {
     },
     sf.SphericalCameraCal.__name__: {
         "critical_theta": np.pi,
-        "distortion_coeffs": [0.035, -0.025, 0.0070, -0.0015],
+        "distortion_coeffs": [0.035, -0.025, 0.0070, -0.0015, 0.00023, -0.00027],
     },
 }
 
@@ -234,7 +235,7 @@ def generate(
             GEO_TYPES: T.Sequence[T.Type], 
             CAM_TYPES: T.Sequence[T.Type], 
             config: CodegenConfig, 
-            output_dir: Path = None) -> Path:
+            output_dir: T.Optional[Path] = None) -> Path:
     """
     Generate the cam package for the given language.
     """

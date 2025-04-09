@@ -28,6 +28,8 @@ class CppConfig(CodegenConfig):
         custom_preamble: An optional string to be prepended on the front of the rendered template
         cse_optimizations: Optimizations argument to pass to :func:`sf.cse <symforce.symbolic.cse>`
         zero_epsilon_behavior: What should codegen do if a default epsilon is not set?
+        normalize_results: Should function outputs be explicitly projected onto the manifold before
+                           returning?
         support_complex: Generate code that can work with std::complex or with regular float types
         force_no_inline: Mark generated functions as ``__attribute__((noinline))``
         zero_initialization_sparsity_threshold: Threshold between 0 and 1 for the sparsity below
@@ -52,6 +54,9 @@ class CppConfig(CodegenConfig):
             (e.g. add fast_math.h). Note that these are only added on a call to
             :meth:`generate_function <symforce.codegen.codegen.Codegen.generate_function>`, i.e.
             you can't define custom functions in e.g. the geo package using this
+        databuffer_type: Changes the type of any DataBuffers to the given type instead of using
+            the default Scalar type. Useful for cases where DataBuffers have a different type than
+            other arguments to the generated function.
     """
 
     doc_comment_line_prefix: str = " * "
@@ -63,6 +68,7 @@ class CppConfig(CodegenConfig):
     explicit_template_instantiation_types: T.Optional[T.Sequence[str]] = None
     override_methods: T.Optional[T.Dict[sympy.Function, str]] = None
     extra_imports: T.Optional[T.List[str]] = None
+    databuffer_type: T.Optional[str] = None
 
     @classmethod
     def backend_name(cls) -> str:
@@ -94,7 +100,8 @@ class CppConfig(CodegenConfig):
     def format_data_accessor(prefix: str, index: int) -> str:
         return f"{prefix}.Data()[{index}]"
 
-    def format_matrix_accessor(self, key: str, i: int, j: int, *, shape: T.Tuple[int, int]) -> str:
+    @staticmethod
+    def format_matrix_accessor(key: str, i: int, j: int, *, shape: T.Tuple[int, int]) -> str:
         CppConfig._assert_indices_in_bounds(i, j, shape)
         return f"{key}({i}, {j})"
 
