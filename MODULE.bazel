@@ -1,0 +1,91 @@
+module(
+    name = "rules_symforce",
+    version = "0.0.1",
+    compatibility_level = 1,
+)
+
+# Basic dependencies
+bazel_dep(name = "bazel_skylib", version = "1.7.1")
+bazel_dep(name = "platforms", version = "0.0.11")
+bazel_dep(name = "rules_cc", version = "0.1.1")
+bazel_dep(name = "rules_python", version = "1.3.0")
+bazel_dep(name = "eigen", version = "3.4.0")
+bazel_dep(name = "fmt", version = "8.1.1")
+bazel_dep(name = "spdlog", version = "1.10.0")
+
+# SymEngine dependencies
+bazel_dep(name = "symforce_repo", version = "480127")
+bazel_dep(name = "symengine_repo", version = "9eb14a")
+bazel_dep(name = "gmp", version = "6.3.0")
+bazel_dep(name = "symenginepy", version = "762f83")
+
+# Third-party modules
+bazel_dep(name = "catch2", version = "3.7.1")
+bazel_dep(name = "catch1", version = "908c37")
+bazel_dep(name = "metis", version = "5.1.0")
+
+
+# We next initialize the python toolchain using the extension.
+# You can set different Python versions in this block.
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(
+    configure_coverage_tool = True,
+    is_default = True,
+    python_version = "3.13",
+)
+
+python.toolchain(
+    configure_coverage_tool = True,
+    python_version = "3.12",
+)
+
+# You only need to load this repositories if you are using multiple Python versions.
+# See the tests folder for various examples on using multiple Python versions.
+# The names "python_3_9" and "python_3_10" are autmatically created by the repo
+# rules based on the `python_version` arg values.
+use_repo(python, "python_3_13", "python_3_12", "python_versions", "pythons_hub")
+
+# EXPERIMENTAL: This is experimental and may be removed without notice
+#uv = use_extension("@rules_python//python/uv:extensions.bzl", "uv")
+#uv.toolchain(uv_version = "0.4.25")
+#use_repo(uv, "uv_toolchains")
+#register_toolchains("@uv_toolchains//:all")
+
+# This extension allows a user to create modifications to how rules_python
+# creates different wheel repositories.  Different attributes allow the user
+# to modify the BUILD file, and copy files.
+# See @rules_python//python/extensions:whl_mods.bzl attributes for more information
+# on each of the attributes.
+# You are able to set a hub name, so that you can have different modifications of the same
+# wheel in different pip hubs.
+pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
+
+# To fetch pip dependencies, use pip.parse. We can pass in various options,
+# but typically we pass requirements and the Python version. The Python
+# version must have been configured by a corresponding `python.toolchain()`
+# call.
+# Alternatively, `python_interpreter_target` can be used to directly specify
+# the Python interpreter to run to resolve dependencies.
+pip.parse(
+    # We can use `envsubst in the above
+    envsubst = ["PIP_INDEX_URL"],
+    # Use the bazel downloader to query the simple API for downloading the sources
+    # Note, that we can use envsubst for this value.
+    experimental_index_url = "${PIP_INDEX_URL:-https://pypi.org/simple}",
+    hub_name = "rspypi",
+    python_version = "3.13",
+    requirements_lock = "//:requirements_dev_py313.txt",
+)
+
+pip.parse(
+    # We can use `envsubst in the above
+    envsubst = ["PIP_INDEX_URL"],
+    # Use the bazel downloader to query the simple API for downloading the sources
+    # Note, that we can use envsubst for this value.
+    experimental_index_url = "${PIP_INDEX_URL:-https://pypi.org/simple}",
+    hub_name = "rspypi",
+    python_version = "3.12",
+    requirements_lock = "//:requirements_dev_py312.txt",
+)
+
+use_repo(pip, "rspypi")

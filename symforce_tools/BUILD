@@ -1,6 +1,5 @@
-load("@symforce_requirements//:requirements.bzl", "requirement")
-load("codegen.bzl", "cc_symforce_library")
-load("lcmgen.bzl", "cc_lcm_library")
+load("@rules_python//python:py_binary.bzl", "py_binary")
+load("@rules_python//python:py_library.bzl", "py_library")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -16,7 +15,7 @@ py_binary(
     main = "generate_gen_no_sym.py",
     deps = [
         ":codegen_utils",
-        requirement("click"),
+        "@rspypi//click",
     ],
 )
 
@@ -26,7 +25,7 @@ py_binary(
     main = "generate_gen.py",
     deps = [
         ":codegen_utils",
-        requirement("click"),
+        "@rspypi//click",
         "@symforce_repo//:symforce_sym",
     ],
 )
@@ -43,8 +42,8 @@ py_binary(
     main = "compiler.py",
     deps = [
         ":codegen_utils",
+        "@rspypi//click",
         "@symforce_repo//:symforce_sym",
-        requirement("click"),
     ],
 )
 
@@ -53,8 +52,8 @@ py_binary(
     srcs = ["lcmgen.py"],
     main = "lcmgen.py",
     deps = [
+        "@rspypi//typing-extensions",
         "@symforce_repo//:skymarshal",
-        requirement("typing-extensions"),
     ],
 )
 
@@ -103,9 +102,9 @@ py_library(
     ],
     deps = [
         ":backend_configs",
+        "@rspypi//clang-format",
+        "@rspypi//jinja2",
+        "@rspypi//typing-extensions",
         "@symforce_repo//:py",
-        requirement("clang-format"),
-        requirement("typing-extensions"),
-        requirement("jinja2"),
     ],
 )
