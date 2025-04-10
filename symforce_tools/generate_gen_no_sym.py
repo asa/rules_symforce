@@ -72,7 +72,7 @@ def symforce_types(output_lcm, geo_types, cam_types):
     from symforce.codegen import codegen_config
     from symforce.codegen import template_util
     from symforce import python_util
-    from rules_symforce.symforce_tools.codegen.lcm_template_dir import LCM_TEMPLATE_DIR
+    from symforce_tools.codegen.lcm_template_dir import LCM_TEMPLATE_DIR
 
     GEO_TYPES = gather_types(geo_types)
     CAM_TYPES = gather_types(cam_types)
@@ -97,7 +97,7 @@ def types(output_lcm):
     from symforce.codegen import codegen_config
     from symforce.codegen import template_util
     from symforce import types_util
-    from rules_symforce.symforce_tools.codegen.lcm_template_dir import LCM_TEMPLATE_DIR
+    from symforce_tools.codegen.lcm_template_dir import LCM_TEMPLATE_DIR
 
     # TODO re explore this when we want to generate types via values automatically
     # can't get this to work!!!
@@ -244,9 +244,9 @@ def symforce_sym(output_dir, geo_types, cam_types):
     """
     generate the python symforce-sym package
     """
-    from rules_symforce.symforce_tools.codegen import geo_package_codegen_stripped
-    from rules_symforce.symforce_tools.codegen import cam_package_codegen_stripped
-    from rules_symforce.symforce_tools.codegen.backends.python.python_config import PythonConfig
+    from symforce_tools.codegen import geo_package_codegen_stripped
+    from symforce_tools.codegen import cam_package_codegen_stripped
+    from symforce_tools.codegen.backends.python.python_config import PythonConfig
 
     py_config = PythonConfig()
     py_base = output_dir / "python"

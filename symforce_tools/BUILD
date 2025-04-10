@@ -16,6 +16,7 @@ py_binary(
     deps = [
         ":codegen_utils",
         "@rspypi//click",
+        "@rspypi//ruff",
     ],
 )
 
@@ -43,6 +44,7 @@ py_binary(
     deps = [
         ":codegen_utils",
         "@rspypi//click",
+        "@rspypi//ruff",
         "@symforce_repo//:symforce_sym",
     ],
 )
@@ -52,7 +54,8 @@ py_binary(
     srcs = ["lcmgen.py"],
     main = "lcmgen.py",
     deps = [
-        "@rspypi//typing-extensions",
+        #        "@rspypi//typing-extensions",
+        "@rspypi//six",
         "@symforce_repo//:skymarshal",
     ],
 )
@@ -102,9 +105,10 @@ py_library(
     ],
     deps = [
         ":backend_configs",
-        "@rspypi//clang-format",
+        #        "@rspypi//clang-format",
         "@rspypi//jinja2",
-        "@rspypi//typing-extensions",
+        "@rspypi//ruff",
+        #        "@rspypi//typing-extensions",
         "@symforce_repo//:py",
     ],
 )

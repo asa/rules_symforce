@@ -10,7 +10,7 @@ symforce.set_symbolic_api("symengine")
 symforce.set_log_level("warning")
 from symforce import codegen
 
-from rules_symforce.symforce_tools.codegen.backends.cpp.cpp_config import CppConfig
+from symforce_tools.codegen.backends.cpp.cpp_config import CppConfig
 
 def write_function_to_disk(data, path):
     # generate the residual 
