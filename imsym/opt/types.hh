@@ -15,12 +15,7 @@
 #include <optional>
 #include <variant>
 //
-/*
-#include "common/cereal/immer_map.hh"
-#include "common/cereal/json.hh"
-#include "common/cereal/optional_nvp.hh"
-#include "common/cereal/variant_with_name.hh"
-*/
+
 #include "cereal/types/optional.hpp"
 #include "common/struct.hh"
 #include "lager/extra/cereal/immer_map.hpp"

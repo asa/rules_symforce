@@ -1,7 +1,7 @@
 
 import click
 
-from symforce_repo.symforce_sym_gen.python import sym
+from symforce_sym_gen.python import sym
 
 import symforce
 symforce.set_epsilon_to_symbol()
@@ -51,7 +51,7 @@ def generatefactor(basename,
                     output_residual_cpp, 
                     output_factor_cpp):
     #print("Starting symforce factor codegen from {}".format(python_src))
-    from symforce_repo.symforce_sym_gen.python import sym
+    from symforce_sym_gen.python import sym
 
     FUNCTION = read_python_source(python_src, function_name)
 

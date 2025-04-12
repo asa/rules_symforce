@@ -1,3 +1,5 @@
+load("@rules_python//python:py_library.bzl", "py_library")
+
 def _generate_factor_impl(ctx):
     arguments = [
         "generatefactor",
@@ -98,7 +100,7 @@ def cc_symforce_factor(
         output_factor_cpp = output_factor_cpp,
     )
 
-    native.py_library(
+    py_library(
         name = name + "_pylib",
         srcs = [
             src,
@@ -106,7 +108,7 @@ def cc_symforce_factor(
         deps = [
             "@symforce_repo//:py",
             "@symforce_repo//:symforce_sym",
-            "@pip//sympy",
+            "@pypi//sympy",
         ] + py_deps,
         tags = tags,
         visibility = ["//visibility:public"],
@@ -212,7 +214,7 @@ def cc_symforce_library(
         return_key = return_key,
         output_cpp = output_cpp,
     )
-    native.py_library(
+    py_library(
         name = name + "_pylib",
         srcs = [
             src,
@@ -220,7 +222,7 @@ def cc_symforce_library(
         deps = [
             "@symforce_repo//:py",
             "@symforce_repo//:symforce_sym",
-            "@pip//sympy",
+            "@pypi//sympy",
         ],
         visibility = ["//visibility:public"],
         tags = tags,

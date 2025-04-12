@@ -1,2 +1,16 @@
+load("@rules_python//python/uv:lock.bzl", "lock")  # buildifier: disable=bzl-visibility
+
 # Root BUILD file for rules_symforce
 package(default_visibility = ["//visibility:public"])
+
+lock(
+    name = "requirements",
+    srcs = ["requirements.in"],
+    out = "requirements.txt",
+    args = [
+        "--emit-index-url",
+        "--universal",
+        "--upgrade",
+    ],
+    visibility = ["//visibility:public"],
+)

@@ -1,5 +1,6 @@
 load("@cython_repo//Tools:rules.bzl", "pyx_library")
 load("@rules_symforce//symengine_tools:config.bzl", "symenginepy_config")
+load("@rules_python//python:py_library.bzl", "py_library")
 
 package(default_visibility = ["//visibility:public"])
 
