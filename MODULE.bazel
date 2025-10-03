@@ -10,14 +10,17 @@ bazel_dep(name = "platforms", version = "0.0.11")
 bazel_dep(name = "rules_cc", version = "0.1.1")
 bazel_dep(name = "rules_python", version = "1.3.0")
 bazel_dep(name = "eigen", version = "3.4.0")
-bazel_dep(name = "fmt", version = "8.1.1")
+bazel_dep(name = "fmt", version = "11.1.4")
 bazel_dep(name = "spdlog", version = "1.10.0")
 bazel_dep(name = "immer", version = "0.8.2")
 bazel_dep(name = "lager", version = "0.1.2")
 
 # SymEngine dependencies
-bazel_dep(name = "symforce_repo", version = "480127")
-bazel_dep(name = "symengine_repo", version = "9eb14a")
+bazel_dep(name = "symforce_repo", version = "c2e895")
+local_path_override(
+    module_name = "symforce_repo",
+    path = "/home/asa/sbox/symforce",
+)
 bazel_dep(name = "gmp", version = "6.3.0")
 bazel_dep(name = "symenginepy", version = "762f83")
 bazel_dep(name = "cython_repo", version = "34282c")
@@ -28,10 +31,6 @@ bazel_dep(name = "catch1", version = "908c37")
 bazel_dep(name = "metis", version = "5.1.0")
 
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
-local_path_override(
-    module_name = "rules_python",
-    path = "../rules_python",
-)
 
 python.toolchain(
     configure_coverage_tool = True,

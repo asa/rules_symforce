@@ -5,7 +5,7 @@
 
 {%- import "../util/util.jinja" as util with context -%}
 
-#include "./{{ camelcase_to_snakecase(cls.__name__) }}.h"
+#include <sym/{{ camelcase_to_snakecase(cls.__name__) }}.h>
 
 namespace sym {
 
@@ -15,7 +15,11 @@ std::ostream& operator<<(std::ostream& os, const {{ cls.__name__ }}{{ scalar[0] 
   const Eigen::IOFormat fmt(Eigen::StreamPrecision, Eigen::DontAlignCols, ", ", "\n", "[", "]");
   os << "<{{ cls.__name__ }}{{ scalar[0] }} " << a.Data().transpose().format(fmt) << ">";
   return os;
-}
+} 
+// use the formatter that prints via ostream in fmt. needed for fmt 11+ and constexpr
+// perhaps move this to another set of files we can include for contexts that see fmt.
+//template <>
+//struct fmt::formatter<{{ cls.__name__ }}> : fmt::ostream_formatter {};
 {% endfor %}
 
 }  // namespace sym

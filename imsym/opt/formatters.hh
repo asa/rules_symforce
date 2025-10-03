@@ -7,7 +7,8 @@
 #include "imsym/opt/values_ops.hh"
 #include "types.hh"
 
-#include <fmt/core.h>
+#include "fmt/core.h"
+
 template<>
 struct fmt::formatter<imsym::coords_t> {
     static constexpr auto parse(format_parse_context& ctx) {

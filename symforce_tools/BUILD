@@ -98,7 +98,7 @@ py_library(
         "codegen/lcm_template_dir.py",
         "codegen/slam_factors_codegen_stripped.py",
         "codegen/sym_util_package_codegen_stripped.py",
-        "codegen/types_package_codegen_stripped.py",
+        "codegen/types_package_codegen.py",
     ],
     data = [
         ":lcm_templates",

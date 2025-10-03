@@ -24,11 +24,12 @@ from symforce.codegen import CodegenConfig
 from symforce.codegen import template_util
 from symforce.codegen.ops_codegen_util import make_group_ops_funcs
 from symforce.codegen.ops_codegen_util import make_lie_group_ops_funcs
+from symforce.codegen.ops_codegen_util import make_manifold_ops_funcs
 
 from symforce_tools.codegen.backends.cpp.cpp_config import CppConfig
 from symforce_tools.codegen.backends.python.python_config import PythonConfig
 
-# need to make the python sym package before any other packages can be generated
+# (asa) need to make the python sym package here before any other packages can be generated
 
 def geo_class_common_data(cls: T.Type, config: CodegenConfig ) -> T.Dict[str, T.Any]:
     """
@@ -40,14 +41,25 @@ def geo_class_common_data(cls: T.Type, config: CodegenConfig ) -> T.Dict[str, T.
 
     data["specs"] = collections.defaultdict(list)
 
-    for func in make_group_ops_funcs(cls, config):
-        data["specs"]["GroupOps"].append(func)
+    # Group + Lie Group Functions
+    if cls in sf.GROUP_GEO_TYPES:
+        data["is_group"] = True
+        data["is_lie_group"] = True
+        for func in make_group_ops_funcs(cls, config):
+            data["specs"]["GroupOps"].append(func)
+        for func in make_lie_group_ops_funcs(cls, config):
+            data["specs"]["LieGroupOps"].append(func)
+    else:
+        data["is_group"] = False
+        data["is_lie_group"] = False
 
-    for func in make_lie_group_ops_funcs(cls, config):
+    # Manifold Functions
+    # Note(chet): Currently all geo types are valid manifolds.
+    data["is_manifold"] = True
+    for func in make_manifold_ops_funcs(cls, config):
         data["specs"]["LieGroupOps"].append(func)
 
     data["doc"] = textwrap.dedent(cls.__doc__).strip() if cls.__doc__ else ""
-    data["is_lie_group"] = hasattr(cls, "from_tangent")
 
     return data
 
@@ -178,6 +190,20 @@ def _custom_generated_methods(config: CodegenConfig) -> T.Dict[T.Type, T.List[Co
             Codegen.function(func=position, input_types=[pose_type], config=config),
         ]
 
+    unit3_functions = [
+        Codegen.function(func=sf.Unit3.basis, config=config),
+        Codegen.function(func=sf.Unit3.to_unit_vector, config=config),
+        Codegen.function(func=sf.Unit3.random_from_uniform_samples, config=config),
+    ]
+    # TODO(chet): because the generated C++ config has normalization default option for class
+    # initialization, these functions are custom written. For Python config, the normalization
+    # default does not exist and so generating these functions automatically is not-redundant.
+    if isinstance(config, PythonConfig):
+        unit3_functions += [
+            Codegen.function(func=sf.Unit3.from_vector, config=config),
+            Codegen.function(func=sf.Unit3.from_unit_vector, config=config),
+        ]
+
     return {
         sf.Rot2: [
             codegen_mul(sf.Rot2, sf.Vector2),
@@ -205,11 +231,7 @@ def _custom_generated_methods(config: CodegenConfig) -> T.Dict[T.Type, T.List[Co
             ),
             Codegen.function(func=sf.Pose3.to_homogenous_matrix, config=config),
         ],
-        sf.Unit3: [
-            Codegen.function(func=sf.Unit3.from_vector, config=config),
-            Codegen.function(func=sf.Unit3.to_unit_vector, config=config),
-            Codegen.function(func=sf.Unit3.to_rotation, config=config),
-        ],
+        sf.Unit3: unit3_functions,
     }
 
 
@@ -246,7 +268,7 @@ def generate(
             data["custom_generated_methods"] = custom_generated_methods.get(cls, {})
             if cls == sf.Pose2:
                 data["imported_classes"] = [sf.Rot2]
-            elif cls in {sf.Pose3, sf.Unit3}:
+            elif cls in {sf.Pose3}:
                 data["imported_classes"] = [sf.Rot3]
 
             for base_dir, relative_path in (
@@ -344,10 +366,15 @@ def generate(
         #        output_path=output_dir / "tests" / name,
         #        data=dict(
         #            Codegen.common_data(),
-        #            all_types=.GEO_TYPES,
+        #            all_types=sf.GEO_TYPES,
         #            cpp_geo_types=[
         #                f"sym::{cls.__name__}<{scalar}>"
-        #                for cls in GEO_TYPES
+        #                for cls in sf.GEO_TYPES
+        #                for scalar in data["scalar_types"]
+        #            ],
+        #            cpp_group_geo_types=[
+        #                f"sym::{cls.__name__}<{scalar}>"
+        #                for cls in sf.GROUP_GEO_TYPES
         #                for scalar in data["scalar_types"]
         #            ],
         #            cpp_matrix_types=[

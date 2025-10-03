@@ -1,4 +1,4 @@
 sympy==1.11.1
-ruff
+ruff==0.9.10
 six
 jinja2
