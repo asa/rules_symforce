@@ -71,6 +71,8 @@ def _py_lcm_impl(ctx):
     python_output_dir = ctx.actions.declare_directory(python_output_path)
     arguments.extend(["--python-path", python_output_dir.path])
     arguments.append("--python-namespace-packages")
+    # Add lcmtypes prefix to internal imports to avoid conflict with geo sym package
+    arguments.extend(["--python-package-prefix", "lcmtypes"])
 
     # Collect all input files from srcs
     input_files = []
@@ -115,7 +117,7 @@ def _py_lcm_impl(ctx):
         DefaultInfo(files = depset([python_output_dir])),
         PyInfo(
             transitive_sources = depset([python_output_dir]),
-            imports = depset([gen_dir_path, lcmtypes_dir_path]),
+            imports = depset([gen_dir_path]),
         ),
     ]
 

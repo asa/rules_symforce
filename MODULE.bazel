@@ -14,6 +14,7 @@ bazel_dep(name = "fmt", version = "11.1.4")
 bazel_dep(name = "spdlog", version = "1.10.0")
 bazel_dep(name = "immer", version = "0.8.2")
 bazel_dep(name = "lager", version = "0.1.2")
+bazel_dep(name = "pybind11_bazel", version = "3.0.0")
 
 # SymEngine dependencies
 bazel_dep(name = "symforce_repo", version = "c2e895")

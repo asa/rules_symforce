@@ -21,31 +21,18 @@ def print_dir(directory):
             print(os.path.join(root, f))
 
 
-def lookup_type(module, type_name):
-    print(module, type_name)
-    return getattr(module, type_name)
-
-
 def lookup_type(type_str):
-    print(type_str)
+    """Recursively look up a type from a dotted string like 'symforce.cam.atan_camera_cal.ATANCameraCal'."""
     module_name, type_name = type_str.rsplit(".", 1)
-    # print( module_name, type_name)
-    # try in the global namespace
     module = globals().get(module_name)
     if module is None:
-        print("module", module_name, "not found in global namespace")
         sub_t = lookup_type(module_name)
         if sub_t is not None:
-            type_class = getattr(sub_t, type_name)
-            print(type_class)
+            type_class = getattr(sub_t, type_name, None)
             if type_class is not None:
                 return type_class
         return None
-    type_class = getattr(module, type_name)
-    if type_class is not None:
-        return type_class
-    else:
-        return None
+    return getattr(module, type_name, None)
 
 
 def gather_types(types: T.Sequence[str]):
@@ -307,18 +294,20 @@ def symforce_sym(output_dir, geo_types, cam_types):
     py_base = output_dir / "python"
 
     GEO_TYPES = gather_types(geo_types)
-    # CAM_TYPES = gather_types(cam_types)
+    CAM_TYPES = gather_types(cam_types)
     print("geo package")
     print("generating", geo_types, cam_types)
     geo_package_codegen_stripped.generate(
         GEO_TYPES=GEO_TYPES, config=py_config, output_dir=py_base
     )
 
-    # print("cam package")
-    # cam_package_codegen_stripped.generate(GEO_TYPES = GEO_TYPES,
-    #                                    CAM_TYPES = CAM_TYPES,
-    #                                    config = py_config,
-    #                                    output_dir = py_base)
+    print("cam package")
+    cam_package_codegen_stripped.generate(
+        GEO_TYPES=GEO_TYPES,
+        CAM_TYPES=CAM_TYPES,
+        config=py_config,
+        output_dir=py_base,
+    )
     print_dir(py_base)
 
 
