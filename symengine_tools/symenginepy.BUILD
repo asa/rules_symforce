@@ -59,6 +59,8 @@ py_library(
         "symengine/sympy_compat.py",
         "symengine/utilities.py",
     ],
+    # Add repo root to PYTHONPATH so "import symengine" works
+    imports = ["."],
     deps = [
         ":lib",
     ],
